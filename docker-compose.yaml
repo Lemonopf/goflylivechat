@@ -9,6 +9,9 @@ services:
     environment:
       - GIN_MODE=release
       - TZ=Asia/Shanghai
+    # 让容器内可以通过 host.docker.internal 访问宿主机（如 MySQL 装在宿主机上）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       # 数据库配置（宿主机可编辑，改完 docker compose restart gofly 生效）
       - ./config/mysql.json:/app/config/mysql.json
