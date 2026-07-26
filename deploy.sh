@@ -14,8 +14,13 @@ DIR="${DIR:-goflylivechat}"
 
 echo "==> 仓库: $REPO_URL  分支: $BRANCH  目录: $DIR"
 
+# 如果当前目录就是仓库本身（在仓库目录内执行脚本），直接使用当前目录，避免嵌套克隆
+if [ -d ".git" ] && [ -f "go.mod" ]; then
+    DIR="."
+fi
+
 # 1. 拉取或更新源码
-if [ -d "$DIR/.git" ]; then
+if [ "$DIR" != "." ] && [ -d "$DIR/.git" ]; then
     echo "==> 更新已有源码..."
     git -C "$DIR" fetch origin
     git -C "$DIR" checkout "$BRANCH"
