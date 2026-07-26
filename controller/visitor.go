@@ -8,6 +8,7 @@ import (
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"goflylivechat/ws"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -79,6 +80,8 @@ func PostVisitorLogin(c *gin.Context) {
 		// 转发访客真实 IP/UA 以匹配 sub2api 会话绑定指纹
 		user, err := tools.VerifySub2apiToken(token, c.ClientIP(), c.GetHeader("User-Agent"))
 		if err != nil {
+			log.Printf("sub2api token verify failed: reason=%s client_ip=%s user_agent=%q err=%v", tools.Sub2apiAuthReason(err), c.ClientIP(), c.GetHeader("User-Agent"), err)
+			tools.Logger().Warnf("sub2api token verify failed: reason=%s client_ip=%s user_agent=%q err=%v", tools.Sub2apiAuthReason(err), c.ClientIP(), c.GetHeader("User-Agent"), err)
 			c.JSON(200, gin.H{
 				"code": 400,
 				"msg":  "登录状态已失效，请填写邮箱继续",

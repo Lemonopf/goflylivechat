@@ -52,6 +52,7 @@ func run() {
 	baseServer := "0.0.0.0:" + port
 	log.Println("Starting server...\nURL: http://" + baseServer)
 	tools.Logger().Println("Starting server...\nURL: http://" + baseServer)
+	tools.LogSub2apiAuthStartupCheck()
 
 	// Gin engine setup
 	engine := gin.Default()
