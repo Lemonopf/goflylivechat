@@ -134,6 +134,7 @@
 </body>
 <script>
     var KEFU_ID=getQuery("customer_id");
+    var USER_ID=getQuery("user_id");
     var REFER='{{.Refer}}';
 </script>
 <script>
@@ -315,7 +316,9 @@
                 this.focusSendConn=true;
             },
             getUserInfo:function(){
-                let obj=this.getCache("visitor_"+KEFU_ID);
+                // 传入 user_id 时按客服+用户隔离缓存，避免同浏览器多用户串号
+                let cacheKey="visitor_"+KEFU_ID+(USER_ID?("_"+USER_ID):"");
+                let obj=this.getCache(cacheKey);
                 var visitor_id=""
                 var to_id=KEFU_ID;
                 if(obj){
@@ -323,7 +326,7 @@
                 }
                 let _this=this;
                 var extra=getQuery("extra");
-                $.post("/visitor_login",{visitor_id:visitor_id,refer:REFER,to_id:to_id,extra:extra},function(res){
+                $.post("/visitor_login",{visitor_id:visitor_id,refer:REFER,to_id:to_id,extra:extra,user_id:USER_ID},function(res){
                     if(res.code!=200){
                         _this.$message({
                             message: res.msg,
@@ -334,7 +337,7 @@
                     }
                     _this.visitor=res.result;
                     _this.getHistoryMessage();
-                    _this.setCache("visitor_"+KEFU_ID,res.result);
+                    _this.setCache(cacheKey,res.result);
                     _this.initConn();
                 });
             },

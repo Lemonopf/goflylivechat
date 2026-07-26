@@ -69,8 +69,12 @@ func PostVisitorLogin(c *gin.Context) {
 
 	toId := c.PostForm("to_id")
 	id := c.PostForm("visitor_id")
+	userId := c.PostForm("user_id")
 
-	if id == "" {
+	if userId != "" {
+		// 传入外部 user_id 时生成确定性 visitor_id：同一 user_id 在任何设备/浏览器都判定为同一访客
+		id = tools.Md5(toId + ":" + userId)
+	} else if id == "" {
 		id = tools.Uuid()
 	}
 	refer := c.PostForm("refer")

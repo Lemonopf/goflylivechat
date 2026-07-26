@@ -182,6 +182,10 @@ CHAT_WIDGET.closeChatWindow = function() {
 CHAT_WIDGET.buildChatUrl = function() {
     let url = `${this.API_URL}/livechat?customer_id=${this.AGENT_ID}`;
 
+    // USER_ID：外部用户 ID，用于跨设备/浏览器识别同一访客
+    if (this.USER_ID) {
+        url += `&user_id=${encodeURIComponent(this.USER_ID)}`;
+    }
     // USER_NAME / USER_AVATAR 通过 extra 参数传递（base64 编码的 JSON）
     const extra = {};
     if (this.USER_NAME) {

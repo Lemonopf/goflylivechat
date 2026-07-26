@@ -85,7 +85,7 @@ Chat Link
 
 http://127.0.0.1:8081/livechat?customer_id=agent
 
-Optional parameters: `refer` (source page) and `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar).
+Optional parameters: `refer` (source page), `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar), and `user_id` (external user ID — visitors with the same `user_id` are recognized as the same person across devices/browsers, e.g. `/livechat?customer_id=agent&user_id=1`).
 
 Popup Integration
 
