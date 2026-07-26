@@ -20,7 +20,12 @@ if [ -d ".git" ] && [ -f "go.mod" ]; then
 fi
 
 # 1. 拉取或更新源码
-if [ "$DIR" != "." ] && [ -d "$DIR/.git" ]; then
+if [ "$DIR" = "." ]; then
+    echo "==> 当前目录即仓库，更新源码..."
+    git fetch origin
+    git checkout "$BRANCH"
+    git pull origin "$BRANCH"
+elif [ -d "$DIR/.git" ]; then
     echo "==> 更新已有源码..."
     git -C "$DIR" fetch origin
     git -C "$DIR" checkout "$BRANCH"
@@ -30,7 +35,9 @@ else
     git clone -b "$BRANCH" "$REPO_URL" "$DIR"
 fi
 
-cd "$DIR"
+if [ "$DIR" != "." ]; then
+    cd "$DIR"
+fi
 
 # 2. 准备配置：首次部署从模板生成 mysql.json，并提示先编辑再部署
 if [ ! -f config/mysql.json ]; then
