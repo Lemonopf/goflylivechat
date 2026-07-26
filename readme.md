@@ -83,7 +83,9 @@ For domain access, configure a reverse proxy to port 8081 to hide the port numbe
 ### Customer Service Integration
 Chat Link
 
-http://127.0.0.1:8081/livechat?user_id=agent
+http://127.0.0.1:8081/livechat?customer_id=agent
+
+Optional parameters: `refer` (source page) and `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar).
 
 Popup Integration
 
@@ -104,6 +106,33 @@ Popup Integration
         CHAT_WIDGET.initialize({
             API_URL: baseUrl,
             AGENT_ID: "agent",
+        });
+    });
+</script>
+```
+### Embed into sub2api
+The chat page and popup widget follow sub2api's visual style (teal `#14b8a6 → #0d9488` gradient, rounded corners, Chinese UI). To embed it into a sub2api site, paste the snippet below into the sub2api page (e.g. global custom HTML), no sub2api code changes required:
+
+```
+<script>
+    (function(global, document, scriptUrl, callback) {
+        const head = document.getElementsByTagName('head')[0];
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = scriptUrl + "/static/js/chat-widget.js";
+        script.onload = script.onreadystatechange = function () {
+            if (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") {
+                callback(scriptUrl);
+            }
+        };
+        head.appendChild(script);
+    })(window, document, "https://chat.lemonzz.xyz", function(baseUrl) {
+        CHAT_WIDGET.initialize({
+            API_URL: baseUrl,
+            AGENT_ID: "agent",
+            AUTO_OPEN: false,
+            // Optional: pass the logged-in user as visitor nickname
+            // USER_NAME: "user@example.com",
         });
     });
 </script>

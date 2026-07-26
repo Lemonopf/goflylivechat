@@ -81,7 +81,7 @@ function flashTitle() {
             document.title = '【】' + originTitle;
         }
         if (titleNum == 2) {
-            document.title = '【new message】' + originTitle;
+            document.title = '【新消息】' + originTitle;
         }
     }, 500);
 

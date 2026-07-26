@@ -8,7 +8,7 @@ const CHAT_WIDGET = {
     USER_AVATAR: "",
     isChatOpen: false,
     originalPageTitle: document.title,
-    chatWindowTitle: "Chat with us",
+    chatWindowTitle: "在线客服",
     isOffline: false,
     iframeId: "chat-widget-iframe",
     containerId: "chat-widget-container"
@@ -46,14 +46,14 @@ CHAT_WIDGET.injectStyles = function() {
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: #1E88E5;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px rgba(20, 184, 166, 0.25), 0 2px 10px rgba(0,0,0,0.2);
             z-index: 9999;
         }
         
@@ -79,7 +79,7 @@ CHAT_WIDGET.injectStyles = function() {
             width: 350px;
             height: 500px;
             background: white;
-            border-radius: 8px;
+            border-radius: 16px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             display: none;
             flex-direction: column;
@@ -89,7 +89,7 @@ CHAT_WIDGET.injectStyles = function() {
         
         #chat-widget-header {
             padding: 15px;
-            background: #1E88E5;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
             color: white;
             display: flex;
             align-items: center;
@@ -152,7 +152,7 @@ CHAT_WIDGET.openChatWindow = function() {
         container.id = this.containerId;
         container.innerHTML = `
             <div id="chat-widget-header">
-                <span>chat with us</span>
+                <span>${this.chatWindowTitle}</span>
                 <span class="close-button">×</span>
             </div>
             <iframe id="${this.iframeId}" src="${this.buildChatUrl()}"></iframe>
@@ -180,16 +180,18 @@ CHAT_WIDGET.closeChatWindow = function() {
 };
 
 CHAT_WIDGET.buildChatUrl = function() {
-    let url = `${this.API_URL}/livechat?user_id=${this.AGENT_ID}`;
+    let url = `${this.API_URL}/livechat?customer_id=${this.AGENT_ID}`;
 
-    if (this.USER_ID) {
-        url += `&user_id=${this.USER_ID}`;
-    }
+    // USER_NAME / USER_AVATAR 通过 extra 参数传递（base64 编码的 JSON）
+    const extra = {};
     if (this.USER_NAME) {
-        url += `&name=${encodeURIComponent(this.USER_NAME)}`;
+        extra.visitorName = this.USER_NAME;
     }
     if (this.USER_AVATAR) {
-        url += `&avatar=${encodeURIComponent(this.USER_AVATAR)}`;
+        extra.visitorAvatar = this.USER_AVATAR;
+    }
+    if (Object.keys(extra).length > 0) {
+        url += `&extra=${encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(extra)))))}`;
     }
 
     return url;
@@ -202,6 +204,7 @@ CHAT_WIDGET.setupEventHandlers = function() {
 
         switch (e.data.type) {
             case 'new_message':
+            case 'message':
                 this.handleIncomingMessage(e.data);
                 break;
             case 'close_chat':
@@ -231,7 +234,7 @@ CHAT_WIDGET.handleIncomingMessage = function(data) {
 CHAT_WIDGET.notifyWithTitleFlash = function() {
     let isFlashing = true;
     const flashInterval = setInterval(() => {
-        document.title = isFlashing ? "New message!" : this.originalPageTitle;
+        document.title = isFlashing ? "新消息！" : this.originalPageTitle;
         isFlashing = !isFlashing;
     }, 1000);
 

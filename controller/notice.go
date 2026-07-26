@@ -11,7 +11,7 @@ func GetNotice(c *gin.Context) {
 	if user.ID == 0 {
 		c.JSON(200, gin.H{
 			"code": 400,
-			"msg":  "user not found",
+			"msg":  "客服不存在",
 		})
 		return
 	}
