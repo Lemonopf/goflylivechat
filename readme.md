@@ -24,7 +24,7 @@ A modern stack built for performance and scalability​
   CREATE DATABASE goflychat CHARSET utf8mb4;
  ```  
 *  Configure Database Connection
-   Edit mysql.json in the config directory:
+   Copy `config/mysql.json.demo` to `config/mysql.json` and edit it (mysql.json is git-ignored and will not be committed):
 ```php
 {
 	"Server":"127.0.0.1",
