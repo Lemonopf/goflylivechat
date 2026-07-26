@@ -1,2 +1,8 @@
 .idea
 imaptool.exe
+.DS_Store
+config/mysql.json
+config/server.json
+install.lock
+logs/
+static/upload/

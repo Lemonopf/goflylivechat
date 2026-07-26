@@ -39,6 +39,19 @@ func SendMessageV2(c *gin.Context) {
 	var kefuInfo models.User
 	var vistorInfo models.Visitor
 	if cType == "kefu" {
+		//以客服身份发消息必须持有合法 token，防止匿名冒充客服
+		token := c.GetHeader("token")
+		if token == "" {
+			token = c.Query("token")
+		}
+		userinfo := tools.ParseToken(token)
+		if userinfo == nil || userinfo["kefu_name"] == nil || userinfo["kefu_name"] != fromId {
+			c.JSON(200, gin.H{
+				"code": 401,
+				"msg":  "验证失败",
+			})
+			return
+		}
 		kefuInfo = models.FindUser(fromId)
 		vistorInfo = models.FindVisitorByVistorId(toId)
 	} else if cType == "visitor" {

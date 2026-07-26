@@ -12,11 +12,11 @@ func InitApiRouter(engine *gin.Engine) {
 	v2 := engine.Group("/2")
 	{
 		//获取消息
-		v2.GET("/messages", controller.GetMessagesV2)
+		v2.GET("/messages", middleware.JwtApiMiddleware, controller.GetMessagesV2)
 		//发送单条信息
 		v2.POST("/message", middleware.Ipblack, controller.SendMessageV2)
 		//关闭连接
-		v2.GET("/message_close", controller.SendCloseMessageV2)
+		v2.GET("/message_close", middleware.JwtApiMiddleware, controller.SendCloseMessageV2)
 		//分页查询消息
 		v2.GET("/messagesPages", controller.GetMessagespages)
 	}
@@ -24,22 +24,22 @@ func InitApiRouter(engine *gin.Engine) {
 	engine.POST("/check", controller.LoginCheckPass)
 
 	engine.GET("/userinfo", middleware.JwtApiMiddleware, controller.GetKefuInfoAll)
-	engine.POST("/register", middleware.Ipblack, controller.PostKefuRegister)
+	engine.POST("/register", middleware.Ipblack, middleware.JwtApiMiddleware, controller.PostKefuRegister)
 	engine.POST("/install", controller.PostInstall)
 	//前后聊天
 	engine.GET("/ws_kefu", middleware.JwtApiMiddleware, ws.NewKefuServer)
 	engine.GET("/ws_visitor", middleware.Ipblack, ws.NewVisitorServer)
 
-	engine.GET("/messages", controller.GetVisitorMessage)
-	engine.GET("/message_notice", controller.SendVisitorNotice)
+	engine.GET("/messages", middleware.JwtApiMiddleware, controller.GetVisitorMessage)
+	engine.GET("/message_notice", middleware.JwtApiMiddleware, controller.SendVisitorNotice)
 	//上传文件
 	engine.POST("/uploadimg", middleware.Ipblack, controller.UploadImg)
 	//上传文件
 	engine.POST("/uploadfile", middleware.Ipblack, controller.UploadFile)
 	//获取未读消息数
-	engine.GET("/message_status", controller.GetVisitorMessage)
+	engine.GET("/message_status", middleware.JwtApiMiddleware, controller.GetVisitorMessage)
 	//设置消息已读
-	engine.POST("/message_status", controller.GetVisitorMessage)
+	engine.POST("/message_status", middleware.JwtApiMiddleware, controller.GetVisitorMessage)
 
 	//获取客服信息
 	engine.POST("/kefuinfo_client", middleware.JwtApiMiddleware, controller.PostKefuClient)
@@ -56,16 +56,16 @@ func InitApiRouter(engine *gin.Engine) {
 	engine.GET("/roles", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.GetRoleList)
 	engine.POST("/role", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.PostRole)
 
-	engine.GET("/visitors_online", controller.GetVisitorOnlines)
+	engine.GET("/visitors_online", middleware.JwtApiMiddleware, controller.GetVisitorOnlines)
 	engine.GET("/visitors_kefu_online", middleware.JwtApiMiddleware, controller.GetKefusVisitorOnlines)
-	engine.GET("/clear_online_tcp", controller.DeleteOnlineTcp)
+	engine.GET("/clear_online_tcp", middleware.JwtApiMiddleware, controller.DeleteOnlineTcp)
 	engine.POST("/visitor_login", middleware.Ipblack, controller.PostVisitorLogin)
 	//engine.POST("/visitor", controller.PostVisitor)
 	engine.GET("/visitor", middleware.JwtApiMiddleware, controller.GetVisitor)
 	engine.GET("/visitors", middleware.JwtApiMiddleware, controller.GetVisitors)
 	engine.GET("/statistics", middleware.JwtApiMiddleware, controller.GetStatistics)
 	//前台接口
-	engine.GET("/about", controller.GetAbout)
+	engine.GET("/about", middleware.JwtApiMiddleware, controller.GetAbout)
 	engine.POST("/about", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.PostAbout)
 	engine.GET("/aboutpages", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.GetAbouts)
 	engine.GET("/notice", controller.GetNotice)
@@ -75,8 +75,8 @@ func InitApiRouter(engine *gin.Engine) {
 	engine.GET("/ipblacks", middleware.JwtApiMiddleware, controller.GetIpblacksByKefuId)
 	engine.GET("/configs", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.GetConfigs)
 	engine.POST("/config", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.PostConfig)
-	engine.GET("/config", controller.GetConfig)
-	engine.GET("/autoreply", controller.GetAutoReplys)
+	engine.GET("/config", middleware.JwtApiMiddleware, controller.GetConfig)
+	engine.GET("/autoreply", middleware.JwtApiMiddleware, controller.GetAutoReplys)
 	engine.GET("/replys", middleware.JwtApiMiddleware, controller.GetReplys)
 	engine.POST("/reply", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.PostReply)
 	engine.POST("/reply_content", middleware.JwtApiMiddleware, middleware.RbacAuth, controller.PostReplyContent)

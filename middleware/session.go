@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"goflylivechat/tools"
 	"net/http"
 )
 
@@ -16,7 +17,7 @@ func SessionHandler() gin.HandlerFunc {
 // SessionConfig 配置会话存储
 func SessionConfig() sessions.Store {
 	sessionMaxAge := 3600
-	sessionSecret := "GOFLY"
+	sessionSecret := tools.GetServerConf().SessionSecret
 
 	store := cookie.NewStore([]byte(sessionSecret))
 	store.Options(sessions.Options{

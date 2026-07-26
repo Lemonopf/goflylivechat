@@ -38,6 +38,7 @@ func JwtApiMiddleware(c *gin.Context) {
 			"msg":  "token失效",
 		})
 		c.Abort()
+		return
 	}
 	c.Set("kefu_id", userinfo["kefu_id"])
 	c.Set("kefu_name", userinfo["kefu_name"])
