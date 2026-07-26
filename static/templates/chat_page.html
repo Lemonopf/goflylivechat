@@ -58,6 +58,44 @@
         a, .chatNoticeContent {
             color: #0d9488 !important;
         }
+        /* 邮箱填写弹层（无 token 时） */
+        .emailMask {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .emailDialog {
+            width: 320px;
+            max-width: calc(100vw - 40px);
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .emailDialogTitle {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f766e;
+        }
+        .emailDialogDesc {
+            font-size: 13px;
+            color: #64748b;
+            margin: 6px 0 14px;
+        }
+        .emailDialogBtn {
+            width: 100%;
+            margin-top: 14px;
+            background-color: #14b8a6 !important;
+            border-color: #14b8a6 !important;
+        }
+        .emailDialogBtn:hover {
+            background-color: #0d9488 !important;
+            border-color: #0d9488 !important;
+        }
     </style>
 </head>
 <body class="visitorBody">
@@ -127,6 +165,16 @@
             <div class="allNotice" v-html><{kefuInfo.allNotice}></div>
         </div>
 
+        <!--无 token 时填写邮箱-->
+        <div class="emailMask" v-show="needEmail">
+            <div class="emailDialog">
+                <div class="emailDialogTitle">在线客服</div>
+                <div class="emailDialogDesc">请填写您的邮箱开始咨询</div>
+                <el-input v-model="emailInput" placeholder="请输入邮箱" v-on:keyup.enter.native="submitEmail"></el-input>
+                <el-button type="primary" class="emailDialogBtn" v-on:click="submitEmail">开始聊天</el-button>
+            </div>
+        </div>
+
         <audio id="chatMessageAudio"></audio>
         <audio id="chatMessageSendAudio"></audio>
     </template>
@@ -134,7 +182,7 @@
 </body>
 <script>
     var KEFU_ID=getQuery("customer_id");
-    var USER_ID=getQuery("user_id");
+    var TOKEN=getQuery("token");
     var REFER='{{.Refer}}';
 </script>
 <script>
@@ -161,6 +209,9 @@
             isIframe:false,
             kefuInfo:{},
             showLoadMore:false,
+            needEmail:false,
+            emailInput:"",
+            visitorEmail:"",
             messages:{
                 page:1,
                 pagesize:5,
@@ -316,9 +367,7 @@
                 this.focusSendConn=true;
             },
             getUserInfo:function(){
-                // 传入 user_id 时按客服+用户隔离缓存，避免同浏览器多用户串号
-                let cacheKey="visitor_"+KEFU_ID+(USER_ID?("_"+USER_ID):"");
-                let obj=this.getCache(cacheKey);
+                let obj=this.getCache("visitor_"+KEFU_ID);
                 var visitor_id=""
                 var to_id=KEFU_ID;
                 if(obj){
@@ -326,18 +375,20 @@
                 }
                 let _this=this;
                 var extra=getQuery("extra");
-                $.post("/visitor_login",{visitor_id:visitor_id,refer:REFER,to_id:to_id,extra:extra,user_id:USER_ID},function(res){
+                $.post("/visitor_login",{visitor_id:visitor_id,refer:REFER,to_id:to_id,extra:extra,token:TOKEN,email:this.visitorEmail},function(res){
                     if(res.code!=200){
                         _this.$message({
                             message: res.msg,
                             type: 'error'
                         });
                         _this.sendDisabled=true;
+                        // 无 token 或 token 失效时，引导填写邮箱
+                        _this.needEmail=true;
                         return;
                     }
                     _this.visitor=res.result;
                     _this.getHistoryMessage();
-                    _this.setCache(cacheKey,res.result);
+                    _this.setCache("visitor_"+KEFU_ID,res.result);
                     _this.initConn();
                 });
             },
@@ -620,6 +671,19 @@
                     }
                 });
             },
+            submitEmail:function(){
+                var email=this.emailInput.trim();
+                if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+                    this.$message({
+                        message: '邮箱格式不正确',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                this.visitorEmail=email;
+                this.needEmail=false;
+                this.getUserInfo();
+            },
             showTitle:function(title){
                 $(".chatBox").append("<div class='chatNotice'><div class=\"chatNoticeContent\"><span>"+title+"</span></div></div>");
                 this.scrollBottom();
@@ -631,7 +695,13 @@
         },
         created: function () {
             this.init();
-            this.getUserInfo();
+            if(TOKEN!=""){
+                // 带 token = 登录态，直接进入聊天
+                this.getUserInfo();
+            }else{
+                // 无 token 先填写邮箱
+                this.needEmail=true;
+            }
         }
     })
 </script>

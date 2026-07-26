@@ -9,6 +9,7 @@ import (
 	"goflylivechat/tools"
 	"goflylivechat/ws"
 	"strconv"
+	"strings"
 )
 
 //	func PostVisitor(c *gin.Context) {
@@ -69,13 +70,43 @@ func PostVisitorLogin(c *gin.Context) {
 
 	toId := c.PostForm("to_id")
 	id := c.PostForm("visitor_id")
-	userId := c.PostForm("user_id")
+	token := c.PostForm("token")
+	email := strings.TrimSpace(c.PostForm("email"))
+	var sub2apiUser *tools.Sub2apiUser
 
-	if userId != "" {
-		// 传入外部 user_id 时生成确定性 visitor_id：同一 user_id 在任何设备/浏览器都判定为同一访客
-		id = tools.Md5(toId + ":" + userId)
-	} else if id == "" {
-		id = tools.Uuid()
+	if token != "" {
+		// 带 token = 登录态：在线校验 sub2api token（含签名、有效期、吊销状态）
+		// 转发访客真实 IP/UA 以匹配 sub2api 会话绑定指纹
+		user, err := tools.VerifySub2apiToken(token, c.ClientIP(), c.GetHeader("User-Agent"))
+		if err != nil {
+			c.JSON(200, gin.H{
+				"code": 400,
+				"msg":  "登录状态已失效，请填写邮箱继续",
+			})
+			return
+		}
+		sub2apiUser = user
+		if email == "" {
+			email = user.Email
+		}
+		id = tools.Md5(toId + ":uid_" + strconv.FormatInt(user.UserID, 10))
+	} else {
+		// 不带 token：必须填写邮箱，邮箱即身份标识
+		if email == "" {
+			c.JSON(200, gin.H{
+				"code": 400,
+				"msg":  "请填写邮箱",
+			})
+			return
+		}
+		if !tools.IsEmail(email) {
+			c.JSON(200, gin.H{
+				"code": 400,
+				"msg":  "邮箱格式不正确",
+			})
+			return
+		}
+		id = tools.Md5(toId + ":email_" + email)
 	}
 	refer := c.PostForm("refer")
 	name := "Guest"
@@ -89,17 +120,40 @@ func PostVisitorLogin(c *gin.Context) {
 	client_ip := c.ClientIP()
 	extra := c.PostForm("extra")
 	extraJson := tools.Base64Decode(extra)
+	hasExtraName := false
 	if extraJson != "" {
 		var extraObj VisitorExtra
 		err := json.Unmarshal([]byte(extraJson), &extraObj)
 		if err == nil {
 			if extraObj.VisitorName != "" {
 				name = extraObj.VisitorName
+				hasExtraName = true
 			}
 			if extraObj.VisitorAvatar != "" {
 				avator = extraObj.VisitorAvatar
 			}
 		}
+	}
+	// 昵称默认使用邮箱（extra 显式指定昵称时优先）
+	if !hasExtraName && email != "" {
+		name = email
+	}
+	// 将身份信息合并进 extra，供客服端“访客信息”面板展示
+	extraMap := map[string]interface{}{}
+	if extraJson != "" {
+		_ = json.Unmarshal([]byte(extraJson), &extraMap)
+	}
+	if email != "" {
+		extraMap["邮箱"] = email
+	}
+	if sub2apiUser != nil {
+		extraMap["用户ID"] = sub2apiUser.UserID
+		extraMap["登录方式"] = "sub2api 登录"
+	} else {
+		extraMap["登录方式"] = "邮箱填写"
+	}
+	if merged, err := json.Marshal(extraMap); err == nil {
+		extra = tools.Base64Encode(string(merged))
 	}
 	//log.Println(name,avator,c.ClientIP(),toId,id,refer,city,client_ip)
 	if name == "" || avator == "" || toId == "" || id == "" || refer == "" || client_ip == "" {
@@ -121,7 +175,7 @@ func PostVisitorLogin(c *gin.Context) {
 	if visitor.Name != "" {
 		avator = visitor.Avator
 		//更新状态上线
-		models.UpdateVisitor(name, visitor.Avator, id, 1, c.ClientIP(), c.ClientIP(), refer, extra)
+		models.UpdateVisitor(name, visitor.Avator, id, 1, c.ClientIP(), c.ClientIP(), refer, city, extra)
 	} else {
 		models.CreateVisitor(name, avator, c.ClientIP(), toId, id, refer, city, client_ip, extra)
 	}

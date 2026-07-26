@@ -3,7 +3,7 @@ const CHAT_WIDGET = {
     AGENT_ID: "",
     AUTO_OPEN: true,
     DISPLAY_MODE: 1,
-    USER_ID: "",
+    TOKEN: "",
     USER_NAME: "",
     USER_AVATAR: "",
     isChatOpen: false,
@@ -182,9 +182,9 @@ CHAT_WIDGET.closeChatWindow = function() {
 CHAT_WIDGET.buildChatUrl = function() {
     let url = `${this.API_URL}/livechat?customer_id=${this.AGENT_ID}`;
 
-    // USER_ID：外部用户 ID，用于跨设备/浏览器识别同一访客
-    if (this.USER_ID) {
-        url += `&user_id=${encodeURIComponent(this.USER_ID)}`;
+    // TOKEN：sub2api 用户登录 token，传入即为登录态（后端校验真伪）
+    if (this.TOKEN) {
+        url += `&token=${encodeURIComponent(this.TOKEN)}`;
     }
     // USER_NAME / USER_AVATAR 通过 extra 参数传递（base64 编码的 JSON）
     const extra = {};

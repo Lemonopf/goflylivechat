@@ -85,7 +85,12 @@ Chat Link
 
 http://127.0.0.1:8081/livechat?customer_id=agent
 
-Optional parameters: `refer` (source page), `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar), and `user_id` (external user ID — visitors with the same `user_id` are recognized as the same person across devices/browsers, e.g. `/livechat?customer_id=agent&user_id=1`).
+Optional parameters: `refer` (source page), `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar), and `token` (a JWT access token issued by sub2api).
+
+Visitor identity rules:
+- **With `token`** = logged-in state. The backend verifies the token **online** by calling sub2api's `GET /api/v1/auth/me` (signature, expiry and revocation are all enforced by sub2api; no shared secret is stored here). Configure sub2api's address in `config/server.json` as `Sub2apiApiURL` (or env `GOFLY_SUB2API_API_URL`). The visitor's real IP and User-Agent are forwarded so sub2api's session-binding fingerprint check passes. Identity is the `user_id` returned by sub2api, nickname defaults to its email. Invalid/expired/revoked tokens are rejected.
+- **Without `token`**: the page asks the visitor to fill in an email before chatting; the email is the visitor's identity and nickname.
+- Same identity (token `user_id` or email) is always recognized as the same visitor across devices and browsers.
 
 Popup Integration
 
@@ -131,8 +136,8 @@ The chat page and popup widget follow sub2api's visual style (teal `#14b8a6 → 
             API_URL: baseUrl,
             AGENT_ID: "agent",
             AUTO_OPEN: false,
-            // Optional: pass the logged-in user as visitor nickname
-            // USER_NAME: "user@example.com",
+            // Pass the sub2api user's access_token for logged-in identity
+            // TOKEN: "<sub2api access_token>",
         });
     });
 </script>

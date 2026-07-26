@@ -22,6 +22,11 @@ func Sha256(src string) string {
 	res := hex.EncodeToString(m.Sum(nil))
 	return res
 }
+// Base64Encode 标准 base64 编码
+func Base64Encode(src string) string {
+	return base64.StdEncoding.EncodeToString([]byte(src))
+}
+
 func Base64Decode(str string) string {
 	// 兼容带填充（StdEncoding）和不带填充（RawStdEncoding）的 base64
 	if data, err := base64.StdEncoding.DecodeString(str); err == nil {

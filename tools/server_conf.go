@@ -15,6 +15,7 @@ const ServerConfPath = "config/server.json"
 type ServerConf struct {
 	JwtSecret     string
 	SessionSecret string
+	Sub2apiApiURL string
 }
 
 var (
@@ -49,6 +50,10 @@ func loadServerConf() *ServerConf {
 	} else if conf.SessionSecret == "" {
 		conf.SessionSecret = randHex(32)
 		changed = true
+	}
+	// sub2api 的 API 地址，用于在线校验嵌入 sub2api 时传入的用户 token
+	if os.Getenv("GOFLY_SUB2API_API_URL") != "" {
+		conf.Sub2apiApiURL = os.Getenv("GOFLY_SUB2API_API_URL")
 	}
 	if changed {
 		saveServerConf(conf)
