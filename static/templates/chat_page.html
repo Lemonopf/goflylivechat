@@ -15,17 +15,75 @@
     <link rel="stylesheet" href="/static/css/common.css?v=sdsderfrgfgdfdf" />
     <link rel="stylesheet" href="/static/css/icono.min.css" />
     <link rel="stylesheet" href="/static/css/icon/iconfont.css?v=fgjlgfda"/>
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search || "");
+            var theme = params.get("theme") === "dark" ? "dark" : "light";
+            document.documentElement.classList.add("chat-theme-" + theme);
+            window.CHAT_PAGE_THEME = theme;
+        })();
+    </script>
     <style>
-        /* sub2api 风格：青色系主题 */
-        /* 填满整个网页 */
+        :root {
+            color-scheme: light;
+            --lc-primary-50: #f0fdfa;
+            --lc-primary-100: #ccfbf1;
+            --lc-primary-200: #99f6e4;
+            --lc-primary-500: #14b8a6;
+            --lc-primary-600: #0d9488;
+            --lc-primary-700: #0f766e;
+            --lc-primary-900: #134e4a;
+            --lc-bg: #f8fafc;
+            --lc-panel: #f1f5f9;
+            --lc-surface: #ffffff;
+            --lc-surface-soft: #f8fafc;
+            --lc-border: #e2e8f0;
+            --lc-text: #0f172a;
+            --lc-muted: #64748b;
+            --lc-muted-strong: #475569;
+            --lc-agent-bubble: #ffffff;
+            --lc-user-bubble: #ccfbf1;
+            --lc-user-border: #99f6e4;
+            --lc-notice-bg: #f1f5f9;
+            --lc-time-bg: #e2e8f0;
+            --lc-input-bg: #ffffff;
+            --lc-overlay: rgba(15, 23, 42, 0.45);
+            --lc-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            --lc-shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.16);
+        }
+        html.chat-theme-dark {
+            color-scheme: dark;
+            --lc-bg: #020617;
+            --lc-panel: #0f172a;
+            --lc-surface: #0f172a;
+            --lc-surface-soft: #111827;
+            --lc-border: #334155;
+            --lc-text: #f8fafc;
+            --lc-muted: #94a3b8;
+            --lc-muted-strong: #cbd5e1;
+            --lc-agent-bubble: #1e293b;
+            --lc-user-bubble: #134e4a;
+            --lc-user-border: #0f766e;
+            --lc-notice-bg: #1e293b;
+            --lc-time-bg: #334155;
+            --lc-input-bg: #020617;
+            --lc-overlay: rgba(2, 6, 23, 0.72);
+            --lc-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+            --lc-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.46);
+        }
         html, body {
             height: 100%;
             margin: 0;
+            background: var(--lc-bg);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
         }
         .visitorBody {
-            background: rgb(245,245,245) !important;
+            background: var(--lc-bg) !important;
+            color: var(--lc-text);
         }
         .chatCenter {
+            background: var(--lc-surface) !important;
+            color: var(--lc-text);
             max-width: none !important;
             max-height: none !important;
             width: 100% !important;
@@ -37,9 +95,51 @@
         .chatEntTitle {
             background-color: #14b8a6 !important;
             background-image: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%) !important;
+            box-shadow: var(--lc-shadow);
+        }
+        .chatEntBox {
+            background: var(--lc-surface);
+        }
+        .chatContext,
+        .chatBox {
+            background: var(--lc-bg) !important;
+        }
+        .chatVisitorPage .chatBox {
+            padding: 12px 10px !important;
+        }
+        .chatContent {
+            background: var(--lc-agent-bubble) !important;
+            border-color: var(--lc-border) !important;
+            color: var(--lc-text) !important;
+            box-shadow: var(--lc-shadow);
         }
         .chatBoxMe .chatContent2 {
-            background-color: #ccfbf1 !important;
+            background-color: var(--lc-user-bubble) !important;
+            border-color: var(--lc-user-border) !important;
+            color: var(--lc-text) !important;
+        }
+        .chatBoxSend {
+            background: var(--lc-surface) !important;
+            border-top-color: var(--lc-border) !important;
+        }
+        .visitorIconBox {
+            color: var(--lc-muted) !important;
+        }
+        .visitorIconBox .iconBtn:hover {
+            color: var(--lc-primary-600) !important;
+        }
+        .visitorEditorArea textarea,
+        .visitorEditorArea .el-textarea__inner {
+            background: var(--lc-input-bg) !important;
+            color: var(--lc-text) !important;
+        }
+        .visitorEditorArea textarea::placeholder,
+        .visitorEditorArea .el-textarea__inner::placeholder {
+            color: var(--lc-muted) !important;
+        }
+        .visitorEditorArea .el-input__count {
+            background: transparent !important;
+            color: var(--lc-muted) !important;
         }
         .visitorEditorBtn.el-button--primary,
         .visitorEditorBtn.el-button--primary:focus {
@@ -55,14 +155,53 @@
             background-color: #99f6e4 !important;
             border-color: #99f6e4 !important;
         }
-        a, .chatNoticeContent {
+        a {
             color: #0d9488 !important;
+        }
+        .chatNoticeContent {
+            background: var(--lc-notice-bg) !important;
+            border: 1px solid var(--lc-border);
+            color: var(--lc-muted-strong) !important;
+        }
+        .chatTime {
+            color: var(--lc-muted) !important;
+        }
+        .chatTime span {
+            background: var(--lc-time-bg) !important;
+            color: var(--lc-muted-strong) !important;
+        }
+        .chatArticle {
+            background: var(--lc-surface) !important;
+            border-left: 1px solid var(--lc-border);
+            color: var(--lc-text);
+        }
+        .hotQuestionTitle {
+            border-bottom-color: var(--lc-border) !important;
+            color: var(--lc-text);
+        }
+        .allNotice {
+            color: var(--lc-muted-strong) !important;
+        }
+        .faceBox {
+            background: var(--lc-surface) !important;
+            border-top: 1px solid var(--lc-border);
+            box-shadow: var(--lc-shadow-lg);
+        }
+        .faceBoxList li {
+            border-color: var(--lc-border) !important;
+        }
+        .faceBoxList li:hover {
+            background: var(--lc-primary-50);
+            border-color: var(--lc-primary-200) !important;
+        }
+        html.chat-theme-dark .faceBoxList li:hover {
+            background: rgba(20, 184, 166, 0.16);
         }
         /* 邮箱填写弹层（无 token 时） */
         .emailMask {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.45);
+            background: var(--lc-overlay);
             z-index: 999;
             display: flex;
             align-items: center;
@@ -71,20 +210,32 @@
         .emailDialog {
             width: 320px;
             max-width: calc(100vw - 40px);
-            background: #fff;
+            background: var(--lc-surface);
             border-radius: 16px;
+            border: 1px solid var(--lc-border);
             padding: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--lc-shadow-lg);
         }
         .emailDialogTitle {
             font-size: 18px;
             font-weight: 600;
-            color: #0f766e;
+            color: var(--lc-primary-700);
+        }
+        html.chat-theme-dark .emailDialogTitle {
+            color: #5eead4;
         }
         .emailDialogDesc {
             font-size: 13px;
-            color: #64748b;
+            color: var(--lc-muted);
             margin: 6px 0 14px;
+        }
+        .emailDialog .el-input__inner {
+            background: var(--lc-input-bg) !important;
+            border-color: var(--lc-border) !important;
+            color: var(--lc-text) !important;
+        }
+        .emailDialog .el-input__inner:focus {
+            border-color: var(--lc-primary-500) !important;
         }
         .emailDialogBtn {
             width: 100%;
