@@ -13,9 +13,9 @@ import (
 const ServerConfPath = "config/server.json"
 
 type ServerConf struct {
-	JwtSecret     string
-	SessionSecret string
-	Sub2apiApiURL string
+	JwtSecret        string
+	SessionSecret    string
+	Sub2apiJwtSecret string
 }
 
 var (
@@ -51,9 +51,9 @@ func loadServerConf() *ServerConf {
 		conf.SessionSecret = randHex(32)
 		changed = true
 	}
-	// sub2api 的 API 地址，用于在线校验嵌入 sub2api 时传入的用户 token
-	if os.Getenv("GOFLY_SUB2API_API_URL") != "" {
-		conf.Sub2apiApiURL = os.Getenv("GOFLY_SUB2API_API_URL")
+	// sub2api 的 jwt.secret，用于离线校验嵌入 sub2api 时传入的用户 token，不自动生成
+	if os.Getenv("GOFLY_SUB2API_JWT_SECRET") != "" {
+		conf.Sub2apiJwtSecret = os.Getenv("GOFLY_SUB2API_JWT_SECRET")
 	}
 	if changed {
 		saveServerConf(conf)

@@ -696,7 +696,7 @@
         created: function () {
             this.init();
             if(TOKEN!=""){
-                // 带 token = 登录态，直接进入聊天
+                // 带 token = 登录态，直接进入聊天（后端离线验签）
                 this.getUserInfo();
             }else{
                 // 无 token 先填写邮箱

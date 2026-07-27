@@ -88,7 +88,7 @@ http://127.0.0.1:8081/livechat?customer_id=agent
 Optional parameters: `refer` (source page), `extra` (base64-encoded JSON `{"visitorName":"张三","visitorAvatar":"https://xxx.jpg"}` to customize visitor nickname/avatar), and `token` (a JWT access token issued by sub2api).
 
 Visitor identity rules:
-- **With `token`** = logged-in state. The backend verifies the token **online** by calling sub2api's `GET /api/v1/auth/me` (signature, expiry and revocation are all enforced by sub2api; no shared secret is stored here). Configure sub2api's address in `config/server.json` as `Sub2apiApiURL` (or env `GOFLY_SUB2API_API_URL`). The visitor's real IP and User-Agent are forwarded so sub2api's session-binding fingerprint check passes. Identity is the `user_id` returned by sub2api, nickname defaults to its email. Invalid/expired/revoked tokens are rejected.
+- **With `token`** = logged-in state. The backend verifies the token **offline**: HS256 signature + `exp`/`nbf` expiry, using the same `jwt.secret` as sub2api (configure it in `config/server.json` as `Sub2apiJwtSecret`, or env `GOFLY_SUB2API_JWT_SECRET`; find the secret in sub2api's database table `security_secrets` where `key='jwt_secret'`, or the deploy machine's `JWT_SECRET`). Identity is the `user_id` inside the token, nickname defaults to its email. Invalid/expired tokens are rejected. Note: offline verification is not aware of sub2api-side revocation (password change / logout) — a token stays valid until it expires.
 - **Without `token`**: the page asks the visitor to fill in an email before chatting; the email is the visitor's identity and nickname.
 - Same identity (token `user_id` or email) is always recognized as the same visitor across devices and browsers.
 

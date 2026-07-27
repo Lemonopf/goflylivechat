@@ -8,7 +8,6 @@ import (
 	"goflylivechat/models"
 	"goflylivechat/tools"
 	"goflylivechat/ws"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -73,26 +72,23 @@ func PostVisitorLogin(c *gin.Context) {
 	id := c.PostForm("visitor_id")
 	token := c.PostForm("token")
 	email := strings.TrimSpace(c.PostForm("email"))
-	var sub2apiUser *tools.Sub2apiUser
+	sub2apiUserID := ""
 
 	if token != "" {
-		// 带 token = 登录态：在线校验 sub2api token（含签名、有效期、吊销状态）
-		// 转发访客真实 IP/UA 以匹配 sub2api 会话绑定指纹
-		user, err := tools.VerifySub2apiToken(token, c.ClientIP(), c.GetHeader("User-Agent"))
+		// 带 token = 登录态：纯离线校验 sub2api 签发的 JWT（HS256 签名 + 有效期）
+		user, err := tools.VerifySub2apiToken(token)
 		if err != nil {
-			log.Printf("sub2api token verify failed: reason=%s client_ip=%s user_agent=%q err=%v", tools.Sub2apiAuthReason(err), c.ClientIP(), c.GetHeader("User-Agent"), err)
-			tools.Logger().Warnf("sub2api token verify failed: reason=%s client_ip=%s user_agent=%q err=%v", tools.Sub2apiAuthReason(err), c.ClientIP(), c.GetHeader("User-Agent"), err)
 			c.JSON(200, gin.H{
 				"code": 400,
 				"msg":  "登录状态已失效，请填写邮箱继续",
 			})
 			return
 		}
-		sub2apiUser = user
+		sub2apiUserID = strconv.FormatInt(user.UserID, 10)
 		if email == "" {
 			email = user.Email
 		}
-		id = tools.Md5(toId + ":uid_" + strconv.FormatInt(user.UserID, 10))
+		id = tools.Md5(toId + ":uid_" + sub2apiUserID)
 	} else {
 		// 不带 token：必须填写邮箱，邮箱即身份标识
 		if email == "" {
@@ -149,8 +145,8 @@ func PostVisitorLogin(c *gin.Context) {
 	if email != "" {
 		extraMap["邮箱"] = email
 	}
-	if sub2apiUser != nil {
-		extraMap["用户ID"] = sub2apiUser.UserID
+	if sub2apiUserID != "" {
+		extraMap["用户ID"] = sub2apiUserID
 		extraMap["登录方式"] = "sub2api 登录"
 	} else {
 		extraMap["登录方式"] = "邮箱填写"
