@@ -63,31 +63,9 @@
                 <el-form-item>
                     <el-button style="width: 100%" type="primary" @click="handleLogin('loginForm')">Log In</el-button>
                 </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" @click="showRegHtml=true">Create New Account</el-button>
-                </el-form-item>
             </el-form>
 
-            <el-form :model="form" :rules="rules" ref="registerForm" v-show="showRegHtml">
-                <el-form-item prop="account">
-                    <el-input v-model="form.account" placeholder="Choose a username"></el-input>
-                </el-form-item>
-                <el-form-item prop="nickname">
-                    <el-input v-model="form.nickname" placeholder="Create a display name"></el-input>
-                </el-form-item>
-                <el-form-item prop="password">
-                    <el-input show-password v-model="form.password" placeholder="Create a password"></el-input>
-                </el-form-item>
-                <el-form-item prop="rePassword">
-                    <el-input show-password v-on:keyup.enter.native="handleRegister('registerForm')" v-model="form.rePassword" placeholder="Confirm password"></el-input>
-                </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" type="primary" @click="handleRegister('registerForm')">Sign Up</el-button>
-                </el-form-item>
-                <el-form-item>
-                    <el-button style="width: 100%" @click="showRegHtml=false">Back to Login</el-button>
-                </el-form-item>
-            </el-form>
+            <!-- 注册已关闭，不再允许创建新账号 -->
         </div>
 
         <p class="copyright">GOFLY LIVE CHAT - Open Source Live Chat Platform</p>

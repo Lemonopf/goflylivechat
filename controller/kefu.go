@@ -158,47 +158,13 @@ func GetKefuInfoSetting(c *gin.Context) {
 	})
 }
 func PostKefuRegister(c *gin.Context) {
-	name := c.PostForm("username")
-	password := c.PostForm("password")
-	nickname := c.PostForm("nickname")
-	avatar := "/static/images/4.jpg"
-
-	if name == "" || password == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"code":   400,
-			"msg":    "All fields are required",
-			"result": nil,
-		})
-		return
-	}
-
-	existingUser := models.FindUser(name)
-	if existingUser.Name != "" {
-		c.JSON(http.StatusOK, gin.H{
-			"code":   409,
-			"msg":    "Username already exists",
-			"result": nil,
-		})
-		return
-	}
-
-	userID := models.CreateUser(name, tools.Md5(password), avatar, nickname)
-	if userID == 0 {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":   500,
-			"msg":    "Registration Failed",
-			"result": nil,
-		})
-		return
-	}
-
+	// 注册已关闭：不再允许创建新客服账号
 	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg":  "Registration successful",
-		"result": gin.H{
-			"user_id": userID,
-		},
+		"code":   403,
+		"msg":    "注册已关闭",
+		"result": nil,
 	})
+	return
 }
 func PostKefuInfo(c *gin.Context) {
 	name, _ := c.Get("kefu_name")

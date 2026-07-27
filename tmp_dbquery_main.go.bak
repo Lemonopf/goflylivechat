@@ -1,0 +1,15 @@
+package main
+
+import (
+	"fmt"
+	"goflylivechat/models"
+)
+
+func main() {
+	var users []models.User
+	models.DB.Select("id, name, nickname, created_at").Find(&users)
+	fmt.Printf("客服总数: %d\n", len(users))
+	for _, u := range users {
+		fmt.Printf("- ID:%d  账号:%s  昵称:%s  创建:%s\n", u.ID, u.Name, u.Nickname, u.CreatedAt.Format("2006-01-02"))
+	}
+}
