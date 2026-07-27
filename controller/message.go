@@ -127,6 +127,7 @@ func SendMessageV2(c *gin.Context) {
 		if !ok || kefu == nil {
 			go SendNoticeEmail(content+"|"+vistorInfo.Name, content)
 		}
+		go SendFeishuWebhookNotice(kefuInfo.Name, vistorInfo.Name, content, vistorInfo.VisitorId, mainURLFromRequest(c))
 		go ws.VisitorAutoReply(vistorInfo, kefuInfo, content)
 		go models.UpdateVisitorLastMessage(vistorInfo.VisitorId, content)
 		c.JSON(200, gin.H{
