@@ -38,11 +38,11 @@
             <el-col :span="5">
                 <div class="chatBg chatLeft">
                     <el-tabs v-model="leftTabActive" @tab-click="handleTabClick">
-                        <el-tab-pane label="在线访客" name="first">
+                        <el-tab-pane :label="onlineTabLabel" name="first">
                             <el-row v-for="item in users" :key="item.uid" class="">
                                 <div :title="item.last_message" style="cursor:pointer" class="onlineUsers hasLastMsg" v-bind:class="{'cur': item.uid==currentGuest }" v-on:click="talkTo(item.uid,item.username)">
                                     <el-col :span="4">
-                                        <el-badge value="new" :hidden="item.hidden_new_message" class="item">
+                                        <el-badge :value="formatUnread(item.unread_num)" :hidden="normalizeUnread(item.unread_num) === 0" class="item">
                                             <el-avatar :size="40" :src="item.avator"></el-avatar>
                                         </el-badge>
                                     </el-col>
@@ -53,11 +53,13 @@
                                 </div>
                             </el-row>
                         </el-tab-pane>
-                        <el-tab-pane label="最近访客" name="second">
-                            <el-row v-for="item in visitors" :key="item.uid" class="">
+                        <el-tab-pane :label="recentTabLabel" name="second">
+                            <el-row v-for="item in visitors" :key="item.visitor_id" class="">
                                 <div style="cursor:pointer" class="onlineUsers" v-bind:class="{'cur': item.visitor_id==currentGuest }" v-on:click="talkTo(item.visitor_id,item.name)">
                                     <el-col :span="4">
-                                        <el-avatar  :size="40" :src="item.avator"></el-avatar>
+                                        <el-badge :value="formatUnread(item.unread_num)" :hidden="normalizeUnread(item.unread_num) === 0" class="item">
+                                            <el-avatar  :size="40" :src="item.avator"></el-avatar>
+                                        </el-badge>
                                     </el-col>
                                     <el-col style="height:40px;overflow: hidden" :span="16">
                                         <div style="height:20px;overflow: hidden"><{item.name}></div>
@@ -318,6 +320,7 @@
             visible:false,
             chatTitleType:"info",
             fullscreenLoading:true,
+            originTitle:document.title,
             leftTabActive:"first",
             rightTabActive:"visitorInfo",
             users:[],
@@ -376,10 +379,144 @@
                 list:[],
             },
         },
+        computed: {
+            onlineUnreadTotal() {
+                return this.sumUnread(this.users, "uid");
+            },
+            recentUnreadTotal() {
+                return this.sumUnread(this.visitors, "visitor_id");
+            },
+            totalUnread() {
+                let total = 0;
+                let seen = {};
+                for (let i = 0; i < this.users.length; i++) {
+                    let id = this.users[i].uid;
+                    if (!id || seen[id]) continue;
+                    seen[id] = true;
+                    total += this.normalizeUnread(this.users[i].unread_num);
+                }
+                for (let i = 0; i < this.visitors.length; i++) {
+                    let id = this.visitors[i].visitor_id;
+                    if (!id || seen[id]) continue;
+                    seen[id] = true;
+                    total += this.normalizeUnread(this.visitors[i].unread_num);
+                }
+                return total;
+            },
+            onlineTabLabel() {
+                return this.formatTabLabel("在线访客", this.onlineUnreadTotal);
+            },
+            recentTabLabel() {
+                return this.formatTabLabel("最近访客", this.recentUnreadTotal);
+            },
+        },
+        watch: {
+            totalUnread() {
+                this.refreshUnreadTitle();
+            },
+        },
         methods: {
             //跳转
             openUrl(url) {
                 window.location.href = url;
+            },
+            normalizeUnread(value) {
+                let num = parseInt(value || 0, 10);
+                return isNaN(num) || num < 0 ? 0 : num;
+            },
+            formatUnread(value) {
+                let num = this.normalizeUnread(value);
+                return num > 99 ? "99+" : num;
+            },
+            formatTabLabel(label, unreadNum) {
+                let num = this.normalizeUnread(unreadNum);
+                return num > 0 ? label + "(" + this.formatUnread(num) + ")" : label;
+            },
+            sumUnread(list, idKey) {
+                let total = 0;
+                let seen = {};
+                for (let i = 0; i < list.length; i++) {
+                    let id = list[i][idKey];
+                    if (!id || seen[id]) continue;
+                    seen[id] = true;
+                    total += this.normalizeUnread(list[i].unread_num);
+                }
+                return total;
+            },
+            refreshUnreadTitle() {
+                let total = this.normalizeUnread(this.totalUnread);
+                let title = total > 0 ? "(" + this.formatUnread(total) + ") " + this.originTitle : this.originTitle;
+                document.title = title;
+                window.parent.postMessage({type: "unread_total", unread_total: total}, "*");
+            },
+            setVisitorUnread(visitorId, unreadNum) {
+                let num = this.normalizeUnread(unreadNum);
+                for (let i = 0; i < this.users.length; i++) {
+                    if (this.users[i].uid == visitorId) {
+                        this.$set(this.users[i], "unread_num", num);
+                        this.$set(this.users[i], "hidden_new_message", num === 0);
+                    }
+                }
+                for (let i = 0; i < this.visitors.length; i++) {
+                    if (this.visitors[i].visitor_id == visitorId) {
+                        this.$set(this.visitors[i], "unread_num", num);
+                        this.$set(this.visitors[i], "hidden_new_message", num === 0);
+                    }
+                }
+                this.$nextTick(() => {
+                    this.refreshUnreadTitle();
+                });
+            },
+            incrementVisitorUnread(visitorId) {
+                let current = 0;
+                for (let i = 0; i < this.users.length; i++) {
+                    if (this.users[i].uid == visitorId) {
+                        current = this.normalizeUnread(this.users[i].unread_num);
+                        break;
+                    }
+                }
+                if (current === 0) {
+                    for (let i = 0; i < this.visitors.length; i++) {
+                        if (this.visitors[i].visitor_id == visitorId) {
+                            current = this.normalizeUnread(this.visitors[i].unread_num);
+                            break;
+                        }
+                    }
+                }
+                this.setVisitorUnread(visitorId, current + 1);
+            },
+            setVisitorLastMessage(visitorId, message) {
+                for (let i = 0; i < this.users.length; i++) {
+                    if (this.users[i].uid == visitorId) {
+                        this.$set(this.users[i], "last_message", message);
+                    }
+                }
+                for (let i = 0; i < this.visitors.length; i++) {
+                    if (this.visitors[i].visitor_id == visitorId) {
+                        this.$set(this.visitors[i], "last_message", message);
+                    }
+                }
+            },
+            normalizeVisitorUnreadState(list, idKey) {
+                for (let i = 0; i < list.length; i++) {
+                    let unreadNum = this.normalizeUnread(list[i].unread_num);
+                    if (list[i][idKey] == this.currentGuest) {
+                        unreadNum = 0;
+                    }
+                    this.$set(list[i], "unread_num", unreadNum);
+                    this.$set(list[i], "hidden_new_message", unreadNum === 0);
+                }
+            },
+            markVisitorRead(visitorId) {
+                if (!visitorId) return;
+                $.ajax({
+                    type:"post",
+                    url:"/message_status",
+                    data:{visitor_id:visitorId},
+                    headers:{
+                        "token":localStorage.getItem("token")
+                    }
+                });
             },
             sendKefuOnline(){
                 let mes = {}
@@ -469,17 +606,16 @@
                         this.msgList.push(content);
                     }
 
-                    for(let i=0;i<this.users.length;i++){
-                        if(this.users[i].uid==msg.id){
-                            this.$set(this.users[i],'last_message',msg.content);
-                            if(this.visitor.visitor_id!=msg.id){
-                                this.$set(this.users[i],'hidden_new_message',false);
-                            }
-                        }
-                    }
+                    this.setVisitorLastMessage(msg.id, msg.content);
                     this.scrollBottom();
                     if(content.is_kefu){
                         return;
+                    }
+                    if (msg.id == this.currentGuest) {
+                        this.setVisitorUnread(msg.id, 0);
+                        this.markVisitorRead(msg.id);
+                    } else {
+                        this.incrementVisitorUnread(msg.id);
                     }
                     window.parent.postMessage({
                         name:msg.name,
@@ -508,11 +644,8 @@
                 this.msgList=[];
                 this.getHistoryMessage();
                 //this.getMesssagesByVisitorId(guestId);
-                for(var i=0;i<this.users.length;i++){
-                    if(this.users[i].uid==guestId){
-                        this.$set(this.users[i],'hidden_new_message',true);
-                    }
-                }
+                this.setVisitorUnread(guestId, 0);
+                this.markVisitorRead(guestId);
             },
             //发送给客户
             chatToUser() {
@@ -562,10 +695,16 @@
                 retData.last_message=retData.last_message;
                 retData.status=1;
                 retData.name=retData.username;
-                retData.hidden_new_message=true;
+                retData.unread_num=this.normalizeUnread(retData.unread_num);
+                if (retData.uid == this.currentGuest) {
+                    retData.unread_num = 0;
+                }
+                retData.hidden_new_message=retData.unread_num === 0;
                 for(let i=0;i<this.users.length;i++){
                     if(this.users[i].uid==retData.uid){
                         flag=true;
+                        this.$set(this.users, i, Object.assign({}, this.users[i], retData));
+                        break;
                     }
                 }
                 if(!flag){
@@ -574,28 +713,54 @@
                 for(let i=0;i<this.visitors.length;i++){
                     if(this.visitors[i].visitor_id==retData.uid){
                         this.visitors[i].status=1;
+                        this.$set(this.visitors[i], "unread_num", retData.unread_num);
+                        this.$set(this.visitors[i], "hidden_new_message", retData.hidden_new_message);
+                        if (retData.last_message) {
+                            this.$set(this.visitors[i], "last_message", retData.last_message);
+                        }
                         break;
                     }
                 }
                 if(this.visitor.visitor_id==retData.uid){
                     this.getVistorInfo(retData.uid)
                 }
+                this.refreshUnreadTitle();
 
             },
             //处理当前在线用户列表
             removeOfflineUser:function (retData) {
+                let offlineUser = null;
                 for(let i=0;i<this.users.length;i++){
                     if(this.users[i].uid==retData.uid){
+                        offlineUser = this.users[i];
                         this.users.splice(i,1);
-                    }
-                }
-                let vid=retData.uid;
-                for(let i=0;i<this.visitors.length;i++){
-                    if(this.visitors[i].visitor_id==vid){
-                        this.visitors[i].status=0;
                         break;
                     }
                 }
+                let vid=retData.uid;
+                let foundVisitor = false;
+                for(let i=0;i<this.visitors.length;i++){
+                    if(this.visitors[i].visitor_id==vid){
+                        foundVisitor = true;
+                        this.$set(this.visitors[i], "status", 0);
+                        break;
+                    }
+                }
+                if (!foundVisitor && offlineUser) {
+                    this.visitors.unshift({
+                        visitor_id: offlineUser.uid,
+                        name: offlineUser.name || offlineUser.username,
+                        avator: offlineUser.avator,
+                        status: 0,
+                        last_message: offlineUser.last_message || "",
+                        unread_num: this.normalizeUnread(offlineUser.unread_num),
+                        hidden_new_message: this.normalizeUnread(offlineUser.unread_num) === 0
+                    });
+                    if (this.visitors.length > this.visitorPageSize) {
+                        this.visitors.pop();
+                    }
+                }
+                this.refreshUnreadTitle();
             },
             //处理当前在线用户列表
             handleOnlineUsers:function (retData) {
@@ -605,7 +770,11 @@
                 this.usersMap=[];
                 for(let i=0;i<retData.length;i++){
                     this.usersMap[retData[i].uid]=retData[i].username;
-                    retData[i].last_message="new visitor";
+                    if(!retData[i].last_message){
+                        retData[i].last_message="new visitor";
+                    }
+                    retData[i].unread_num=this.normalizeUnread(retData[i].unread_num);
+                    retData[i].hidden_new_message=retData[i].unread_num === 0;
                 }
                 if(this.users.length==0){
                     this.users = retData;
@@ -618,6 +787,7 @@
                         this.visitors[i].status=1;
                     }
                 }
+                this.refreshUnreadTitle();
 
             },
             //处理正在输入
@@ -669,12 +839,11 @@
                         "token":localStorage.getItem("token")
                     },
                     success: function(data) {
-                        if(data.code==200 && data.result!=null){
-                            _this.users=data.result;
-                            for(var i=0;i<_this.users.length;i++){
-                                _this.$set(_this.users[i],'hidden_new_message',true);
-                            }
-                        }
+	                        if(data.code==200 && data.result!=null){
+	                            _this.users=data.result;
+	                            _this.normalizeVisitorUnreadState(_this.users, "uid");
+	                            _this.refreshUnreadTitle();
+	                        }
                         if(data.code!=200){
                             _this.$message({
                                 message: data.msg,
@@ -870,9 +1039,11 @@
                     },
                     success: function(data) {
                         if(data.result.list!=null){
-                            _this.visitors=data.result.list;
-                            _this.visitorCount=data.result.count;
-                        }
+	                            _this.visitors=data.result.list;
+	                            _this.normalizeVisitorUnreadState(_this.visitors, "visitor_id");
+	                            _this.visitorCount=data.result.count;
+	                            _this.refreshUnreadTitle();
+	                        }
                         if(data.code!=200){
                             _this.$message({
                                 message: data.msg,

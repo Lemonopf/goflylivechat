@@ -339,7 +339,8 @@ func GetMessagesV2(c *gin.Context) {
 		}
 		chatMessages = append(chatMessages, chatMessage)
 	}
-	models.ReadMessageByVisitorId(visitorId)
+	kefuName, _ := c.Get("kefu_name")
+	models.ReadVisitorMessageByKefuId(kefuName.(string), visitorId)
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
@@ -363,6 +364,54 @@ func GetMessagespages(c *gin.Context) {
 			"page":     page,
 			"list":     list,
 			"pagesize": pageSize,
+		},
+	})
+}
+
+func GetMessageStatus(c *gin.Context) {
+	visitorId := c.Query("visitor_id")
+	if visitorId == "" {
+		visitorId = c.Query("visitorId")
+	}
+	if visitorId == "" {
+		c.JSON(200, gin.H{
+			"code": 400,
+			"msg":  "visitor_id不能为空",
+		})
+		return
+	}
+	kefuName, _ := c.Get("kefu_name")
+	unreadNum := models.FindUnreadMessageNumByKefuVisitorId(kefuName.(string), visitorId)
+	c.JSON(200, gin.H{
+		"code": 200,
+		"msg":  "ok",
+		"result": gin.H{
+			"visitor_id": visitorId,
+			"unread_num": unreadNum,
+		},
+	})
+}
+
+func PostMessageStatus(c *gin.Context) {
+	visitorId := c.PostForm("visitor_id")
+	if visitorId == "" {
+		visitorId = c.PostForm("visitorId")
+	}
+	if visitorId == "" {
+		c.JSON(200, gin.H{
+			"code": 400,
+			"msg":  "visitor_id不能为空",
+		})
+		return
+	}
+	kefuName, _ := c.Get("kefu_name")
+	models.ReadVisitorMessageByKefuId(kefuName.(string), visitorId)
+	c.JSON(200, gin.H{
+		"code": 200,
+		"msg":  "ok",
+		"result": gin.H{
+			"visitor_id": visitorId,
+			"unread_num": 0,
 		},
 	})
 }

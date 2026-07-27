@@ -223,6 +223,14 @@ func GetVisitors(c *gin.Context) {
 	}
 	kefuId, _ := c.Get("kefu_name")
 	vistors := models.FindVisitorsByKefuId(uint(page), uint(pagesize), kefuId.(string))
+	visitorIds := make([]string, 0, len(vistors))
+	for _, visitor := range vistors {
+		visitorIds = append(visitorIds, visitor.VisitorId)
+	}
+	unreadNums := models.FindUnreadMessageNumByKefuVisitorIds(kefuId.(string), visitorIds)
+	for i := range vistors {
+		vistors[i].UnreadNum = unreadNums[vistors[i].VisitorId]
+	}
 	count := models.CountVisitorsByKefuId(kefuId.(string))
 	c.JSON(200, gin.H{
 		"code": 200,
@@ -262,7 +270,8 @@ func GetVisitorMessage(c *gin.Context) {
 		result = append(result, item)
 
 	}
-	go models.ReadMessageByVisitorId(visitorId)
+	kefuName, _ := c.Get("kefu_name")
+	go models.ReadVisitorMessageByKefuId(kefuName.(string), visitorId)
 	c.JSON(200, gin.H{
 		"code":   200,
 		"msg":    "ok",
@@ -343,6 +352,10 @@ func GetKefusVisitorOnlines(c *gin.Context) {
 		if user.LastMessage == "" {
 			user.LastMessage = "new visitor"
 		}
+	}
+	unreadNums := models.FindUnreadMessageNumByKefuVisitorIds(kefuName.(string), visitorIds)
+	for _, user := range users {
+		user.UnreadNum = unreadNums[user.Uid]
 	}
 
 	tcps := make([]string, 0)

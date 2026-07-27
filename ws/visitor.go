@@ -80,7 +80,7 @@ func AddVisitorToList(user *User) {
 	}
 	ClientList[user.Id] = user
 	lastMessage := models.FindLastMessageByVisitorId(user.Id)
-	userInfo := make(map[string]string)
+	userInfo := make(map[string]interface{})
 	userInfo["uid"] = user.Id
 	userInfo["username"] = user.Name
 	userInfo["avator"] = user.Avator
@@ -88,6 +88,7 @@ func AddVisitorToList(user *User) {
 	if userInfo["last_message"] == "" {
 		userInfo["last_message"] = "new visitor"
 	}
+	userInfo["unread_num"] = models.FindUnreadMessageNumByKefuVisitorId(user.To_id, user.Id)
 	msg := TypeMessage{
 		Type: "userOnline",
 		Data: userInfo,
@@ -99,7 +100,7 @@ func AddVisitorToList(user *User) {
 }
 func VisitorOnline(kefuId string, visitor models.Visitor) {
 	lastMessage := models.FindLastMessageByVisitorId(visitor.VisitorId)
-	userInfo := make(map[string]string)
+	userInfo := make(map[string]interface{})
 	userInfo["uid"] = visitor.VisitorId
 	userInfo["username"] = visitor.Name
 	userInfo["avator"] = visitor.Avator
@@ -107,6 +108,7 @@ func VisitorOnline(kefuId string, visitor models.Visitor) {
 	if userInfo["last_message"] == "" {
 		userInfo["last_message"] = "new visitor"
 	}
+	userInfo["unread_num"] = models.FindUnreadMessageNumByKefuVisitorId(kefuId, visitor.VisitorId)
 	msg := TypeMessage{
 		Type: "userOnline",
 		Data: userInfo,

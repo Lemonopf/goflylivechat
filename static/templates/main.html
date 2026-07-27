@@ -60,7 +60,7 @@
                 <span slot="title">Dashboard</span>
             </div>
 
-            <div class="menuLeftItem" v-on:click="haveNewMessage='';openIframeUrl('/chat_main')">
+            <div class="menuLeftItem" v-on:click="openIframeUrl('/chat_main')">
                 <el-badge :value="haveNewMessage" class="item">
                     <i class="el-icon-chat-dot-round"></i>
                 </el-badge>
@@ -100,12 +100,22 @@
             onlineType:"success",
             haveNewMessage:"",
             iframeUrl:"/pannel",
+            originTitle:document.title,
         },
         methods: {
             focusWindow(){
                 var _this=this;
                 window.addEventListener('message',function(e){
                     var redata=e.data;
+                    if(redata.type=="unread_total"){
+                        var total=parseInt(redata.unread_total || 0, 10);
+                        if(isNaN(total) || total<0){
+                            total=0;
+                        }
+                        _this.haveNewMessage=total>0?(total>99?"99+":total):"";
+                        document.title=total>0?"("+(total>99?"99+":total)+") "+_this.originTitle:_this.originTitle;
+                        return;
+                    }
                     if(!redata.name||!redata.body){
                         return;
                     }

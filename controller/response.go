@@ -21,6 +21,7 @@ type VisitorOnline struct {
 	Username    string `json:"username"`
 	Avator      string `json:"avator"`
 	LastMessage string `json:"last_message"`
+	UnreadNum   uint   `json:"unread_num"`
 }
 type GetuiResponse struct {
 	Code float64                `json:"code"`

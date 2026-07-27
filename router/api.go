@@ -37,9 +37,9 @@ func InitApiRouter(engine *gin.Engine) {
 	//上传文件
 	engine.POST("/uploadfile", middleware.Ipblack, controller.UploadFile)
 	//获取未读消息数
-	engine.GET("/message_status", middleware.JwtApiMiddleware, controller.GetVisitorMessage)
+	engine.GET("/message_status", middleware.JwtApiMiddleware, controller.GetMessageStatus)
 	//设置消息已读
-	engine.POST("/message_status", middleware.JwtApiMiddleware, controller.GetVisitorMessage)
+	engine.POST("/message_status", middleware.JwtApiMiddleware, controller.PostMessageStatus)
 
 	//获取客服信息
 	engine.POST("/kefuinfo_client", middleware.JwtApiMiddleware, controller.PostKefuClient)

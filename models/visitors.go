@@ -17,6 +17,7 @@ type Visitor struct {
 	ClientIp    string `json:"client_ip"`
 	LastMessage string `json:"last_message"`
 	Extra       string `json:"extra"`
+	UnreadNum   uint   `gorm:"-" json:"unread_num"`
 }
 
 func CreateVisitor(name, avator, sourceIp, toId, visitorId, refer, city, clientIp, extra string) {
