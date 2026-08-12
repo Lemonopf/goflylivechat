@@ -1,6 +1,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="">
     <meta name="author" content="">
     <title>GOFLY - Open Source Customer Support System</title>
@@ -8,7 +9,7 @@
     <script src="/static/cdn/vue/2.6.11/vue.min.js"></script>
     <script src="/static/cdn/element-ui/2.15.1/index.js"></script>
     <script src="/static/cdn/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="/static/css/common.css?v=dgftr65ujhfg">
+    <link rel="stylesheet" href="/static/css/common.css?v=mobile1">
     <script src="/static/js/functions.js"></script>
     <script src="/static/js/reconnecting-websocket.min.js"></script>
     <link rel="stylesheet" href="/static/css/icon/iconfont.css?v=fgjlgfda"/>
@@ -32,7 +33,7 @@
     </style>
 </head>
 <body>
-<div id="app" class="chatMainPage">
+<div id="app" class="chatMainPage" v-bind:class="'mobile-view-' + mobileView">
     <template>
         <el-row>
             <el-col :span="5">
@@ -83,12 +84,16 @@
 
             <el-col :span="13">
                 <div class="kefuMainBg chatBgContext">
-                    <el-alert
-                            :closable="false"
-                            :type="chatTitleType"
-                            show-icon
-                            :title="chatTitle+chatInputing">
-                    </el-alert>
+                    <div class="mobileChatHeader">
+                        <div class="mobileNavBtn" v-on:click="mobileView='list'"><i class="el-icon-arrow-left"></i><span>列表</span></div>
+                        <el-alert
+                                :closable="false"
+                                :type="chatTitleType"
+                                show-icon
+                                :title="chatTitle+chatInputing">
+                        </el-alert>
+                        <div class="mobileNavBtn" v-on:click="mobileView='info'"><span>访客</span><i class="el-icon-more-outline"></i></div>
+                    </div>
 
                     <div class="kefuFuncBtns" v-if="visitor.visitor_id" style="display: none">
                         <el-button v-on:click="getMesssagesByVisitorId(visitor.visitor_id,true)" size="small" type="success" plain icon="el-icon-user">Load All</el-button>
@@ -138,12 +143,13 @@
 
                         <div class="clear"></div>
                         <el-button class="kefuSendBtn" :disabled="sendDisabled" size="mini" type="primary" v-on:click="chatToUser">发送</el-button>
-                        <el-input type="textarea" :autosize="{ minRows: 8, maxRows: 12}" class="chatArea" v-model="messageContent" v-on:keyup.enter.native="chatToUser" placeholder="请输入消息"></el-input>
+                        <el-input type="textarea" :autosize="isMobile ? { minRows: 3, maxRows: 6 } : { minRows: 8, maxRows: 12 }" class="chatArea" v-model="messageContent" v-on:keyup.enter.native="chatToUser" placeholder="请输入消息"></el-input>
                     </div>
                 </div>
             </el-col>
 
             <el-col :span="6" class="chatRight">
+                <div class="mobileNavBtn mobileInfoBack" v-on:click="mobileView='chat'"><i class="el-icon-arrow-left"></i><span>返回聊天</span></div>
                 <div class="chatBg">
                     <el-tabs v-model="rightTabActive" @tab-click="handleTabClick">
                         <el-tab-pane label="访客信息" name="visitorInfo">
@@ -213,7 +219,7 @@
                                 <template slot="title">
                                     <i class="el-icon-folder"></i>&nbsp;<{reply.group_name}>
                                 </template>
-                                <div class="replyItem" @click="messageContent=item.item_content" v-for="item in reply.items">
+                                <div class="replyItem" @click="messageContent=item.item_content;if(isMobile){mobileView='chat'}" v-for="item in reply.items">
                                     <{item.item_content}> &nbsp;&nbsp;
                                     <el-button @click="deleteReplyContent(item.item_id)" type="text">删除</el-button>
                                 </div>
@@ -227,7 +233,7 @@
                                 <template slot="title">
                                     <i class="el-icon-s-order"></i>&nbsp;<{reply.group_name}>
                                 </template>
-                                <div class="replyItem" @click="messageContent=item.item_content" v-for="item in reply.items">
+                                <div class="replyItem" @click="messageContent=item.item_content;if(isMobile){mobileView='chat'}" v-for="item in reply.items">
                                     <el-popover placement="left" width="300" trigger="hover">
                                         <div v-html="replaceContent(item.item_content)"></div>
                                         <div class="replyItemTitle" slot="reference">
@@ -318,6 +324,8 @@
         delimiters:["<{","}>"],
         data: {
             visible:false,
+            isMobile:false,
+            mobileView:'list',
             chatTitleType:"info",
             fullscreenLoading:true,
             originTitle:document.title,
@@ -627,6 +635,15 @@
                     _this.chatInputing="";
                 }
             },
+            //手机端检测（<=768px 视为手机端）
+            checkMobile(){
+                let _this=this;
+                this._mobileResizeHandler=function(){
+                    _this.isMobile=window.innerWidth<=768;
+                };
+                this._mobileResizeHandler();
+                window.addEventListener('resize',this._mobileResizeHandler);
+            },
             //接手客户
             talkTo(guestId,name) {
                 this.currentGuest = guestId;
@@ -646,6 +663,10 @@
                 //this.getMesssagesByVisitorId(guestId);
                 this.setVisitorUnread(guestId, 0);
                 this.markVisitorRead(guestId);
+                //手机端：选中会话后切换到聊天视图
+                if(this.isMobile){
+                    this.mobileView='chat';
+                }
             },
             //发送给客户
             chatToUser() {
@@ -1412,7 +1433,13 @@
         mounted() {
             document.addEventListener('paste', this.onPasteUpload)
         },
+        beforeDestroy() {
+            if(this._mobileResizeHandler){
+                window.removeEventListener('resize',this._mobileResizeHandler);
+            }
+        },
         created: function () {
+            this.checkMobile();
             //jquery
             this.initJquery();
             this.getKefuInfo();

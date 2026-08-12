@@ -584,3 +584,126 @@ a{color: #07a9fe;text-decoration: none;}
 ::-webkit-scrollbar-thumb:hover {
     background-color: #999;
 }
+
+/* ================= 客服端手机端适配 ================= */
+/* 手机端导航按钮（桌面端隐藏） */
+.mobileChatHeader {
+    display: flex;
+    align-items: stretch;
+}
+.mobileChatHeader .el-alert {
+    flex: 1;
+}
+.mobileNavBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    background: #fff;
+    color: #4299e2;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 1px solid #e6e6e6;
+}
+.mobileNavBtn i {
+    font-size: 16px;
+}
+.mobileNavBtn span {
+    margin: 0 2px;
+}
+.mobileInfoBack {
+    height: 36px;
+    justify-content: flex-start;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+@media screen and (max-width: 768px) {
+    /* ---- main.html 框架：左侧菜单 -> 底部 Tab 栏 ---- */
+    .mainLeftMenu {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 56px;
+        float: none;
+        display: flex;
+        align-items: stretch;
+        z-index: 1000;
+    }
+    .mainLeftMenu > div:first-child {
+        display: none;
+    }
+    .mainLeftMenu .menuLeftItem {
+        flex: 1;
+        width: auto;
+        height: 56px;
+        padding-top: 8px;
+    }
+    .mainLeftMenu .menuLeftItemLogout {
+        position: static;
+    }
+    .mainRight {
+        width: 100%;
+        height: calc(100% - 56px);
+        float: none;
+    }
+
+    /* ---- chat_main.html 三栏 -> 单栏切换 ---- */
+    .chatMainPage {
+        height: 100%;
+        margin-top: 0;
+    }
+    .chatMainPage > .el-row {
+        height: 100%;
+    }
+    .chatMainPage > .el-row > .el-col {
+        width: 100% !important;
+        height: 100%;
+        display: none;
+    }
+    .chatMainPage.mobile-view-list > .el-row > .el-col:first-child,
+    .chatMainPage.mobile-view-chat > .el-row > .el-col:nth-child(2),
+    .chatMainPage.mobile-view-info > .el-row > .el-col:nth-child(3) {
+        display: block;
+    }
+    .chatMainPage .mobileNavBtn {
+        display: flex;
+    }
+    .chatMainPage .chatLeft {
+        margin-left: 0;
+        border-left: none;
+        border-right: none;
+    }
+    .chatMainPage .chatRight {
+        overflow-y: auto;
+    }
+
+    /* ---- 聊天区细节 ---- */
+    .chatMainPage .chatBox {
+        height: calc(100% - 150px);
+    }
+    .chatMainPage .kefuFuncBox {
+        height: 110px;
+    }
+    .chatMainPage .kefuFuncBox .faceBox {
+        bottom: 105px;
+        left: 0;
+    }
+    .chatMainPage .chatMsgContent {
+        max-width: calc(100% - 60px);
+    }
+    .chatMainPage .chatContent img {
+        max-width: 100%;
+    }
+    .chatMainPage .chatArea {
+        width: 100%;
+    }
+
+    /* ---- 弹窗宽度 ---- */
+    .el-dialog {
+        width: 92% !important;
+        margin-top: 8vh !important;
+    }
+}
